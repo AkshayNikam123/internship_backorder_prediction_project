@@ -3,14 +3,13 @@ from typing import List
 
 #Declaring variables for setup functions
 PROJECT_NAME="backorder-predictor"
-VERSION="0.0.1"
+VERSION="0.0.6"
 AUTHOR="Akshay Nikam"
 DESRCIPTION="This is  Machine Learning Project"
 
 REQUIREMENT_FILE_NAME="requirements.txt"
 
 HYPHEN_E_DOT = "-e ."
-
 
 def get_requirements_list() -> List[str]:
     """
@@ -27,7 +26,6 @@ def get_requirements_list() -> List[str]:
         return requirement_list
 
 
-
 setup(
 name=PROJECT_NAME,
 version=VERSION,
@@ -36,3 +34,4 @@ description=DESRCIPTION,
 packages=find_packages(), 
 install_requires=get_requirements_list()
 )
+

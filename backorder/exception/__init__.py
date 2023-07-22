@@ -1,5 +1,6 @@
 import os
 import sys
+import traceback
 
 class backorderException(Exception):
     
@@ -16,10 +17,16 @@ class backorderException(Exception):
         error_message: Exception object
         error_detail: object of sys module
         """
-        _,_ ,exec_tb = error_detail.exc_info() #to traceback which line causing error first to blank spaces for type and value given in exc.info
-        exception_block_line_number = exec_tb.tb_frame.f_lineno #error for exception block
-        try_block_line_number = exec_tb.tb_lineno    #error for which try block (connected above exception block)
-        file_name = exec_tb.tb_frame.f_code.co_filename
+        try:
+           _,_ ,exec_tb = error_detail.exc_info() #to traceback which line causing error first to blank spaces for type and value given in exc.info
+           exception_block_line_number = exec_tb.tb_frame.f_lineno #error for exception block
+           try_block_line_number = exec_tb.tb_lineno    #error for which try block (connected above exception block)
+           file_name = exec_tb.tb_frame.f_code.co_filename
+        except Exception:
+            exception_block_line_number = -1
+            try_block_line_number = -1
+            file_name = "Unknown"
+
         error_message = f"""
         Error occured in script: 
         [ {file_name} ] at 
@@ -33,4 +40,4 @@ class backorderException(Exception):
 
 
     def __repr__(self) -> str:
-        return backorderException.__name__.str()
+        return backorderException.__name__

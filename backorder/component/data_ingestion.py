@@ -1,13 +1,18 @@
 from backorder.entity.config_entity import DataIngestionConfig
 import sys,os
+import zipfile
 from backorder.exception import backorderException
 from backorder.logger import logging
 from backorder.entity.artifact_entity import DataIngestionArtifact
-import tarfile,zipfile
+import tarfile
 import numpy as np
 from six.moves import urllib
 import pandas as pd
 from sklearn.model_selection import StratifiedShuffleSplit
+import requests
+from zipfile import ZipFile
+import io
+import traceback
 
 class DataIngestion:
                                                         #from entity
@@ -19,7 +24,7 @@ class DataIngestion:
         except Exception as e:
             raise backorderException(e,sys)
     
-
+    
     def download_backorder_data(self,) -> str:
         try:
             #extraction remote url to download dataset
@@ -38,13 +43,49 @@ class DataIngestion:
             tgz_file_path = os.path.join(tgz_download_dir, backorder_file_name)#complete file path
 
             logging.info(f"Downloading file from :[{download_url}] into :[{tgz_file_path}]")
+             # Send a GET request to download the zip file
+            #response = requests.get(download_url,tgz_file_path)    
             urllib.request.urlretrieve(download_url, tgz_file_path) #download file from  url passed and location where to download
             logging.info(f"File :[{tgz_file_path}] has been downloaded successfully.")
             return tgz_file_path
 
         except Exception as e:
             raise backorderException(e,sys) from e
+    
+        
+    """
+    def download_backorder_data(self) -> str:
+        try:
+            download_url = self.data_ingestion_config.dataset_download_url
+            tgz_download_dir = self.data_ingestion_config.tgz_download_dir
 
+            if os.path.exists(tgz_download_dir):
+                os.remove(tgz_download_dir)
+
+            os.makedirs(tgz_download_dir, exist_ok=True)
+
+            backorder_file_name = os.path.basename(download_url)
+            tgz_file_path = os.path.join(tgz_download_dir, backorder_file_name)
+
+            logging.info(f"Downloading file from: [{download_url}] into: [{tgz_file_path}]")
+            
+            # Send a GET request to download the zip file
+            response = requests.get(download_url)
+            
+            # Check if the request was successful (status code 200)
+            if response.status_code == 200:
+                # Save the downloaded content to the file
+                with open(tgz_file_path, "wb") as f:
+                    f.write(response.content)
+                logging.info(f"File: [{tgz_file_path}] has been downloaded successfully.")
+            else:
+                raise backorderException(f"Failed to download the file. Status code: {response.status_code}", sys)
+
+            return tgz_file_path
+
+        except Exception as e:
+            raise backorderException(e, sys) from e
+    
     def extract_tgz_file(self,tgz_file_path:str):
         try:
             raw_data_dir = self.data_ingestion_config.raw_data_dir
@@ -55,22 +96,94 @@ class DataIngestion:
             os.makedirs(raw_data_dir,exist_ok=True)
 
             logging.info(f"Extracting tgz file: [{tgz_file_path}] into dir: [{raw_data_dir}]")
-           # if os.path.exists(tgz_file_path):
-                #with zipfile.ZipFile(tgz_file_path , 'r') as zip_file:
-                    #zip_file.extractall(path=raw_data_dir)
-            with tarfile.open(tgz_file_path) as backorder_tgz_file_obj:
-                backorder_tgz_file_obj.extractall(path=raw_data_dir)
+            if os.path.exists(tgz_file_path):
+                try:
+                    
+                     if response.status_code == 200:
+                       #with zipfile.ZipFile(tgz_file_path , 'r') as zip_file:
+                         with ZipFile(io.BytesIO(response.content)) as zip_file:
+                           zip_file.extractall(path=raw_data_dir)
+            #with tarfile.open(tgz_file_path) as backorder_tgz_file_obj:
+                #backorder_tgz_file_obj.extractall(path=raw_data_dir)
+                except zipfile.BadZipFile as e:
+                # Log the specific error message for BadZipFile
+                    logging.error(f"BadZipFile error: {e}")
+                # Print the traceback for additional details
+                traceback.print_exc()
+            else:
+               logging.error(f"The tgz_file_path: [{tgz_file_path}] does not exist.")  
+
             logging.info(f"Extraction completed")
 
         except Exception as e:
             raise backorderException(e,sys) from e
-    
-    def split_data_as_train_test(self) -> DataIngestionArtifact:
+    """
+     
+    def extract_tgz_file(self, tgz_file_path: str):
         try:
             raw_data_dir = self.data_ingestion_config.raw_data_dir
 
-            file_name = os.listdir(raw_data_dir)[0]#accesing file name from raw data ,[0] gives file name
+            if os.path.exists(raw_data_dir):
+                os.remove(raw_data_dir)
 
+            os.makedirs(raw_data_dir, exist_ok=True)
+
+            logging.info(f"Extracting zip file: [{tgz_file_path}] into dir: [{raw_data_dir}]")
+            if os.path.exists(tgz_file_path):
+                try:
+                    with zipfile.ZipFile(tgz_file_path, 'r') as backorder_zip_file_obj:
+                        backorder_zip_file_obj.extractall(path=raw_data_dir)
+                except zipfile.BadZipFile as e:
+                    # Log the specific error message for BadZipFile
+                    logging.error(f"BadZipFile error: {e}")
+                    # Print the traceback for additional details
+                    traceback.print_exc()
+            else:
+                logging.error(f"The tgz_file_path: [{tgz_file_path}] does not exist.")
+
+            logging.info("Extraction completed")
+
+        except Exception as e:
+            raise backorderException(e, sys) from e
+
+    """      
+    def extract_tgz_file(self, tgz_file_path: str):
+        try:
+            raw_data_dir = self.data_ingestion_config.raw_data_dir
+
+            if os.path.exists(raw_data_dir):
+                os.remove(raw_data_dir)
+
+            os.makedirs(raw_data_dir, exist_ok=True)
+
+            logging.info(f"Extracting tgz file: [{tgz_file_path}] into dir: [{raw_data_dir}]")
+            if os.path.exists(tgz_file_path):
+                try:
+                    with tarfile.open(tgz_file_path) as backorder_tgz_file_obj:
+                        backorder_tgz_file_obj.extractall(path=raw_data_dir)
+                except tarfile.ReadError as e:
+                    # Log the specific error message for ReadError
+                    logging.error(f"ReadError: {e}")
+                    # Print the traceback for additional details
+                    traceback.print_exc()
+            else:
+                logging.error(f"The tgz_file_path: [{tgz_file_path}] does not exist.")
+
+            logging.info("Extraction completed")
+
+        except Exception as e:
+            raise backorderException(e, sys) from e
+    """
+    def split_data_as_train_test(self) -> DataIngestionArtifact:
+        try:
+            raw_data_dir = self.data_ingestion_config.raw_data_dir
+            file_list = os.listdir(raw_data_dir)
+
+            #if not file_list:
+                #raise backorderException("The raw_data_dir is empty. No files found in the directory.", sys)
+            #file_name = os.listdir(raw_data_dir)[0]
+            file_name = file_list[0]  #accesing file name from raw data ,[0] gives file name
+            
             backorder_file_path = os.path.join(raw_data_dir,file_name)#creating file path
 
 
