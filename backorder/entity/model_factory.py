@@ -78,12 +78,12 @@ def evaluate_classification_model(model_list: list, X_train:np.ndarray, y_train:
             test_acc = accuracy_score(y_test, y_test_pred)
             
             #Calculating f1 score  on training and testing dataset
-            train_f1_score = f1_score(y_train, y_train_pred)
-            test_f1_score = f1_score(y_test, y_test_pred)
+            train_f1_score = f1_score(y_train, y_train_pred, average='macro')
+            test_f1_score = f1_score(y_test, y_test_pred , average = 'macro')
 
             
-            model_accuracy = (2 * (train_acc * test_acc)) / (train_acc + test_acc)
-            diff_test_train_acc = abs(test_acc - train_acc) #to figure under fit or over fit
+            model_accuracy = (2 * (train_f1_score * test_f1_score)) / (train_f1_score + test_f1_score)
+            diff_test_train_acc = abs(test_f1_score-train_f1_score) #to figure under fit or over fit
             
             #logging all important metric
             logging.info(f"{'>>'*30} Score {'<<'*30}")

@@ -13,6 +13,7 @@ import requests
 from zipfile import ZipFile
 import io
 import traceback
+import gzip
 
 class DataIngestion:
                                                         #from entity
@@ -118,26 +119,23 @@ class DataIngestion:
         except Exception as e:
             raise backorderException(e,sys) from e
     """
-     
     def extract_tgz_file(self, tgz_file_path: str):
         try:
             raw_data_dir = self.data_ingestion_config.raw_data_dir
 
             if os.path.exists(raw_data_dir):
-                os.remove(raw_data_dir)
+                shutil.rmtree(raw_data_dir)
 
             os.makedirs(raw_data_dir, exist_ok=True)
 
-            logging.info(f"Extracting zip file: [{tgz_file_path}] into dir: [{raw_data_dir}]")
+            logging.info(f"Extracting tgz file: [{tgz_file_path}] into dir: [{raw_data_dir}]")
             if os.path.exists(tgz_file_path):
                 try:
-                    with zipfile.ZipFile(tgz_file_path, 'r') as backorder_zip_file_obj:
-                        backorder_zip_file_obj.extractall(path=raw_data_dir)
-                except zipfile.BadZipFile as e:
-                    # Log the specific error message for BadZipFile
-                    logging.error(f"BadZipFile error: {e}")
-                    # Print the traceback for additional details
-                    traceback.print_exc()
+                    with gzip.open(tgz_file_path, 'rb') as f_in:
+                        with open(raw_data_dir, 'wb') as f_out:
+                            shutil.copyfileobj(f_in, f_out)
+                except Exception as e:
+                    raise backorderException(f"Error extracting tgz file: {e}", sys) from e
             else:
                 logging.error(f"The tgz_file_path: [{tgz_file_path}] does not exist.")
 
@@ -146,6 +144,41 @@ class DataIngestion:
         except Exception as e:
             raise backorderException(e, sys) from e
 
+    """
+    def extract_tgz_file(self, tgz_file_path: str):
+        try:
+            raw_data_dir = self.data_ingestion_config.raw_data_dir
+
+            if os.path.exists(raw_data_dir):
+                os.rmdir(raw_data_dir)
+
+            os.makedirs(raw_data_dir, exist_ok=True)
+
+            logging.info(f"Extracting zip file: [{tgz_file_path}] into dir: [{raw_data_dir}]")
+            if os.path.exists(tgz_file_path):
+                try:
+                    with gzip.open(tgz_file_path,'rb')  as backorder_zip_file_obj:
+                        #with open(raw_data_dir,'wb') as f_out:
+                           # f_out.write(f_in.read())
+                        backorder_zip_file_obj.extractall(path=raw_data_dir)
+                   
+                    #with zipfile.ZipFile(tgz_file_path, 'r') as backorder_zip_file_obj:
+                        #backorder_zip_file_obj.extractall(path=raw_data_dir)
+                #except zipfile.BadZipFile as e:
+                    # Log the specific error message for BadZipFile
+                   # logging.error(f"BadZipFile error: {e}")
+                    # Print the traceback for additional details
+                    #traceback.print_exc()
+                except Exception as e:
+                    print("error extarcting gzip file",e)
+            else:
+                logging.error(f"The tgz_file_path: [{tgz_file_path}] does not exist.")
+
+            logging.info("Extraction completed")
+
+        except Exception as e:
+            raise backorderException(e, sys) from e
+    """
     """      
     def extract_tgz_file(self, tgz_file_path: str):
         try:
@@ -174,6 +207,7 @@ class DataIngestion:
         except Exception as e:
             raise backorderException(e, sys) from e
     """
+
     def split_data_as_train_test(self) -> DataIngestionArtifact:
         try:
             raw_data_dir = self.data_ingestion_config.raw_data_dir
