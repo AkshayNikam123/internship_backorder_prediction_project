@@ -14,6 +14,7 @@ from zipfile import ZipFile
 import io
 import traceback
 import gzip
+import shutil 
 
 class DataIngestion:
                                                         #from entity
